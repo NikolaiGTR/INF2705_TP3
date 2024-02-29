@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
         playerOrientation.x -= y * 0.01f;
 
         glm::vec3 positionOffset = glm::vec3(0.0);
-        const float SPEED = 0.01f;
+        const float SPEED = 0.1f;
         if (w.getKeyHold(Window::Key::W))
             positionOffset.z -= SPEED;
         if (w.getKeyHold(Window::Key::S))

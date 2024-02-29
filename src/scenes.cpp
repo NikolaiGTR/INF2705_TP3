@@ -117,9 +117,10 @@ void StencilTestScene::render(glm::mat4& view, glm::mat4& projPersp)
 	m_res.suzanneTexture.use();
     // TODO: Remplir le stencil en dessinant les singes
     glEnable(GL_STENCIL_TEST);
-    glStencilOp(GL_ADD, GL_ADD, GL_ADD);
+    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
     for (int i = 0; i < 3; i++) {
-        glStencilFunc(GL_ALWAYS, 1<<i ,0xFF);
+        glStencilFunc(GL_ALWAYS, 1<<i , 1<<i);
+        glStencilMask(1 << i);
         glUniformMatrix4fv(m_res.mvpLocationModel, 1, GL_FALSE, &singes[i][0][0]);
         m_res.suzanne.draw();
     }
@@ -139,13 +140,15 @@ void StencilTestScene::render(glm::mat4& view, glm::mat4& projPersp)
     // TODO: Dessiner les halos 
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glDisable(GL_DEPTH_TEST);
     for (int i = 0; i < 3; i++) {
-        glStencilFunc(GL_LESS, 255, 1<<i);
+        glStencilFunc(GL_NOTEQUAL, 1<<i, 1<<i);
         m_res.simple.use();
         i < 2 ? glUniform3f(m_res.colorLocationSimple,1,0,0) : glUniform3f(m_res.colorLocationSimple, 0,0,1);
         glUniformMatrix4fv(m_res.mvpLocationSimple, 1, GL_FALSE, &singes[i][0][0]);
         m_res.suzanne.draw();
     }
+    glEnable(GL_DEPTH_TEST);
     glDisable(GL_STENCIL_TEST);
 }
 
