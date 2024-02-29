@@ -108,12 +108,23 @@ void StencilTestScene::render(glm::mat4& view, glm::mat4& projPersp)
 
     // TODO: Précalcul des matrices mvp des singes,
 	// utilisable pour les modèles et halos.
+    glm::mat4 singes[3];
+    for (int i = 0; i < 3; i++) {
+        singes[i] = i < 2 ? projView * enemyTransform[i]:projView*allyTransform[0];
+    }
 	
-	
+    glClearStencil(0);
 	m_res.suzanneTexture.use();
     // TODO: Remplir le stencil en dessinant les singes
-	
-	
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_ALWAYS, 1, 1);
+    for (int i = 0; i < 3; i++) {
+        glUniformMatrix4fv(m_res.mvpLocationModel, 1, GL_FALSE, &singes[i][0][0]);
+        m_res.suzanne.draw();
+    }
+    glDisable(GL_STENCIL_TEST);
+    glStencilFunc(GL_EQUAL, 0, 3);
+    
 	
 	// On dessine le ciel un peu plus tôt
     mvp = projPersp * glm::mat4(glm::mat3(view));
