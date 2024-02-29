@@ -10,7 +10,6 @@ float growthFactor = 0.1f;
 void main()
 {
     // TODO
-    position = position + (normalize(normal) * growthFactor);
-    gl_Position = mvp * vec4(position, 1.0f);
+    gl_Position = mvp * vec4(position + (normalize(normal) * growthFactor), 1.0f);
 }
  

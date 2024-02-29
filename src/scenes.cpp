@@ -113,18 +113,18 @@ void StencilTestScene::render(glm::mat4& view, glm::mat4& projPersp)
         singes[i] = i < 2 ? projView * enemyTransform[i]:projView*allyTransform[0];
     }
 	
-    glClearStencil(0);
+
 	m_res.suzanneTexture.use();
     // TODO: Remplir le stencil en dessinant les singes
     glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_ALWAYS, 1, 1);
+    glStencilOp(GL_ADD, GL_ADD, GL_ADD);
     for (int i = 0; i < 3; i++) {
+        glStencilFunc(GL_ALWAYS, 1<<i ,0xFF);
         glUniformMatrix4fv(m_res.mvpLocationModel, 1, GL_FALSE, &singes[i][0][0]);
         m_res.suzanne.draw();
     }
     glDisable(GL_STENCIL_TEST);
-    glStencilFunc(GL_EQUAL, 0, 3);
-    
+    m_res.suzanneTexture.unuse();
 	
 	// On dessine le ciel un peu plus tôt
     mvp = projPersp * glm::mat4(glm::mat3(view));
@@ -136,8 +136,17 @@ void StencilTestScene::render(glm::mat4& view, glm::mat4& projPersp)
 	// TODO: Dessin du mur vitrée
 
 
-    // TODO: Dessiner les halos    
-
+    // TODO: Dessiner les halos 
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    for (int i = 0; i < 3; i++) {
+        glStencilFunc(GL_LESS, 255, 1<<i);
+        m_res.simple.use();
+        i < 2 ? glUniform3f(m_res.colorLocationSimple,1,0,0) : glUniform3f(m_res.colorLocationSimple, 0,0,1);
+        glUniformMatrix4fv(m_res.mvpLocationSimple, 1, GL_FALSE, &singes[i][0][0]);
+        m_res.suzanne.draw();
+    }
+    glDisable(GL_STENCIL_TEST);
 }
 
 
