@@ -135,9 +135,23 @@ void StencilTestScene::render(glm::mat4& view, glm::mat4& projPersp)
     m_res.glassTexture.use();
     
 	// TODO: Dessin du mur vitrée
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(false);
+    m_res.glassTexture.use();
+    mvp = glm::mat4(1.0f);
+    mvp = glm::translate(mvp, glm::vec3{ 0,-1.0f,0 });
+    mvp = projPersp *view*mvp;
+    glUniformMatrix4fv(m_res.mvpLocationModel, 1, GL_FALSE, &mvp[0][0]);
+    m_res.glass.draw();
+    m_res.glassTexture.unuse();
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+    glDepthMask(true);
 
-
-    // TODO: Dessiner les halos 
+    // Dessiner les halos 
+    glStencilMask(0xFF);
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     for (int i = 0; i < 3; i++) {
@@ -155,7 +169,6 @@ void StencilTestScene::render(glm::mat4& view, glm::mat4& projPersp)
         glUniformMatrix4fv(m_res.mvpLocationSimple, 1, GL_FALSE, &singes[i][0][0]);
         m_res.suzanne.draw();
     }
-    glStencilMask(0xFF);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_STENCIL_TEST);
 }
