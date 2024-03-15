@@ -51,4 +51,6 @@ layout (std140) uniform LightingBlock
 void main()
 {
     // TODO
+    gl_Position = mvp * vec4(position, 1.0f);
+    attribOut.texCoords = texCoords;
 }
