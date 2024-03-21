@@ -48,42 +48,28 @@ layout (std140) uniform LightingBlock
     float spotOpeningAngle;
 };
 
-struct Reflections
+struct Light
 {
-    vec3 ambient;
     vec3 diffuse;
     vec3 specular;
 };
 
-float attenuation = 1.0;
 
-Reflections calcReflection(in vec3 L, in vec3 N, in vec3 O) {
-    Reflections result = Reflections(
-        vec3(0, 0, 0),
+Light calcLight(in vec3 L, in vec3 N, in vec3 O, UniversalLight light) {
+    Light result = Light(
         vec3(0, 0, 0),
         vec3(0, 0, 0)
     );
 
-
-    result.ambient = mat.ambient *
-        (lightModelAmbient +
-        lights[0].ambient +
-        lights[1].ambient +
-        lights[2].ambient);
-
     float NdotL = max(0.0, dot(N, L));
     if (NdotL > 0.0) {
-        result.diffuse = attenuation * mat.diffuse *
-            (lights[0].ambient +
-            lights[1].ambient +
-            lights[2].ambient) * NdotL;
+        result.diffuse = mat.diffuse * light.diffuse * NdotL;
+
         float spec = (useBlinn ?
             dot(normalize(L + O), N) :
             dot(reflect(-L, N), O));
 
-        if (spec > 0)  result.specular = attenuation * mat.specular *
-            (lights[0].specular + lights[1].specular + lights[2].specular) * 
-            pow(spec, mat.shininess);
+        if (spec > 0) result.specular = mat.specular * light.specular * pow(spec, mat.shininess);
     }
 
     return result;
@@ -93,23 +79,32 @@ void main()
 {
     // TODO
     gl_Position = mvp * vec4(position, 1.0f);
+
     attribOut.texCoords = texCoords;
-    attribOut.emission = mat.emission + mat.ambient * (lightModelAmbient +
+    attribOut.emission = mat.emission;
+
+    attribOut.ambient = mat.ambient * (lightModelAmbient +
         lights[0].ambient +
         lights[1].ambient +
         lights[2].ambient);
-   
-    vec3 pos = vec3(mvp * vec4(position, 1.0f));   
-    vec3 lumDir = (lights[0].position + lights[1].position + lights[2].position).xyz;
+
+    vec3 pos = vec3(modelView * vec4(position, 1.0f));
     vec3 obsVec = (-pos);
 
+    attribOut.diffuse = vec3(0);
+    attribOut.specular = vec3(0);
     vec3 N = normalize(normalMatrix * normal);
-    vec3 L = normalize(lumDir);
     vec3 O = normalize(obsVec);
 
-    Reflections reflection = calcReflection(L, N, O);
+    for (int i = 0; i < 3; i++)
+    {
+        vec3 lumDir = lights[i].position - pos;        
+        vec3 L = normalize(lumDir);
+        
+        Light lightVecs = calcLight(L, N, O, lights[i]);
 
-    //attribOut.ambient = reflection.ambient;
-    //attribOut.diffuse = reflection.diffuse;
-    //attribOut.specular = reflection.specular;
+        attribOut.diffuse += lightVecs.diffuse;
+        attribOut.specular += lightVecs.specular;
+    }
+    
 }
