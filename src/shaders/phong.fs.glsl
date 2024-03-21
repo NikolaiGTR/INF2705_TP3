@@ -62,8 +62,7 @@ Light calcLight(in vec3 L, in vec3 N, in vec3 O, UniversalLight light)
 
     if (NdotL > 0.0)
     {
-        lightVecs.diffuse = mat.diffuse *
-            light.diffuse * NdotL;
+        lightVecs.diffuse = mat.diffuse * light.diffuse * NdotL;
 
         float spec = (useBlinn ?
             dot(normalize(L + O), N) :
@@ -79,9 +78,7 @@ void main()
 {
     // TODO
 
-    //FragColor = texture(diffuseSampler, attribIn.texCoords) + texture(specularSampler, attribIn.texCoords);
-
-    vec3 N = normalize(gl_FrontFacing ? attribIn.normal : -attribIn.normal);
+    vec3 N = normalize( attribIn.normal );
     vec3 O = normalize(attribIn.obsPos);
 
     Light lightVecs;
@@ -89,7 +86,6 @@ void main()
     lightVecs.specular = vec3(0);
 
     for (int i = 0; i < 3; i++) {
-        //vec3 lumDir = lights[i].position + attribIn.obsPos;
         vec3 L = normalize(attribIn.lightDir[i]);
         Light temp = calcLight(L, N, O, lights[i]);
 
@@ -105,5 +101,5 @@ void main()
 
     FragColor = texture(diffuseSampler, attribIn.texCoords) * vec4(lightVecs.diffuse, 1.0f);
     FragColor += texture(specularSampler, attribIn.texCoords) * vec4(lightVecs.specular, 1.0f);
-    FragColor += clamp(color, 0.0, 1.0);
+    FragColor += color;
 }

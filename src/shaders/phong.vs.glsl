@@ -55,7 +55,7 @@ void main()
 
     attribOut.texCoords = texCoords;
 
-    attribOut.normal = normal * normalMatrix;
+    attribOut.normal = normalMatrix * normal;
 
     vec3 pos = vec3(modelView * vec4(position, 1.0f));
 
