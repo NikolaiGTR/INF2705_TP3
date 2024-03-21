@@ -91,14 +91,13 @@ void main()
 {
     // TODO
 
+    FragColor = texture(diffuseSampler, attribIn.texCoords);
 
     vec3 L = normalize(attribIn.lightDir[0] + attribIn.lightDir[1] + attribIn.lightDir[2]);
-
     vec3 N = normalize(gl_FrontFacing ? attribIn.normal : -attribIn.normal);
-
     vec3 O = normalize(attribIn.obsPos);
 
     Reflections reflections = calcReflection(L, N, O, attenuation);
     vec4 color = vec4(mat.emission + reflections.ambient + reflections.diffuse + reflections.specular, 1.0f);
-    FragColor = clamp(color, 0.0, 1.0);
+    FragColor += clamp(color, 0.0, 1.0);
 }

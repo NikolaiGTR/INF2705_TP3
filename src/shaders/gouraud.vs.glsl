@@ -48,10 +48,68 @@ layout (std140) uniform LightingBlock
     float spotOpeningAngle;
 };
 
+struct Reflections
+{
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
 
+float attenuation = 1.0;
+
+Reflections calcReflection(in vec3 L, in vec3 N, in vec3 O) {
+    Reflections result = Reflections(
+        vec3(0, 0, 0),
+        vec3(0, 0, 0),
+        vec3(0, 0, 0)
+    );
+
+
+    result.ambient = mat.ambient *
+        (lightModelAmbient +
+        lights[0].ambient +
+        lights[1].ambient +
+        lights[2].ambient);
+
+    float NdotL = max(0.0, dot(N, L));
+    if (NdotL > 0.0) {
+        result.diffuse = attenuation * mat.diffuse *
+            (lights[0].ambient +
+            lights[1].ambient +
+            lights[2].ambient) * NdotL;
+        float spec = (useBlinn ?
+            dot(normalize(L + O), N) :
+            dot(reflect(-L, N), O));
+
+        if (spec > 0)  result.specular = attenuation * mat.specular *
+            (lights[0].specular + lights[1].specular + lights[2].specular) * 
+            pow(spec, mat.shininess);
+    }
+
+    return result;
+}
 
 void main()
 {
     // TODO
     gl_Position = mvp * vec4(position, 1.0f);
+    attribOut.texCoords = texCoords;
+    attribOut.emission = mat.emission + mat.ambient * (lightModelAmbient +
+        lights[0].ambient +
+        lights[1].ambient +
+        lights[2].ambient);
+   
+    vec3 pos = vec3(mvp * vec4(position, 1.0f));   
+    vec3 lumDir = (lights[0].position + lights[1].position + lights[2].position).xyz;
+    vec3 obsVec = (-pos);
+
+    vec3 N = normalize(normalMatrix * normal);
+    vec3 L = normalize(lumDir);
+    vec3 O = normalize(obsVec);
+
+    Reflections reflection = calcReflection(L, N, O);
+
+    //attribOut.ambient = reflection.ambient;
+    //attribOut.diffuse = reflection.diffuse;
+    //attribOut.specular = reflection.specular;
 }
