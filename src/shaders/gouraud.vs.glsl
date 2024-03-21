@@ -98,7 +98,7 @@ void main()
 
     for (int i = 0; i < 3; i++)
     {
-        vec3 lumDir = lights[i].position - pos;        
+        vec3 lumDir = (view * vec4(lights[i].position, 1.0f)).xyz - pos;        
         vec3 L = normalize(lumDir);
         
         Light lightVecs = calcLight(L, N, O, lights[i]);
