@@ -46,23 +46,23 @@ out vec4 FragColor;
 
 float attenuation = 1.0;
 
-struct Reflections
+struct Light
 {
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
 };
 
-Reflections calcReflection(in vec3 L, in vec3 N, in vec3 O, float attenuation)
+Light calcLight(in vec3 L, in vec3 N, in vec3 O, float attenuation)
 {
-    Reflections result = Reflections(
+    Light lightVecs = Light(
         vec3(0, 0, 0),
         vec3(0, 0, 0),
         vec3(0, 0, 0)
     );
 
 
-    result.ambient = mat.ambient * 
+    lightVecs.ambient = mat.ambient * 
         ( lightModelAmbient + 
           lights[0].ambient + 
           lights[1].ambient + 
@@ -72,7 +72,7 @@ Reflections calcReflection(in vec3 L, in vec3 N, in vec3 O, float attenuation)
 
     if (NdotL > 0.0)
     {
-        result.diffuse = mat.diffuse *
+        lightVecs.diffuse = mat.diffuse *
             (lights[0].ambient +
              lights[1].ambient +
              lights[2].ambient) * NdotL * attenuation;
@@ -81,23 +81,25 @@ Reflections calcReflection(in vec3 L, in vec3 N, in vec3 O, float attenuation)
             dot(normalize(L + O), N) :
             dot(reflect(-L, N), O));
 
-        if (spec > 0) result.specular = attenuation * mat.specular * ( lights[0].specular + lights[1].specular + lights[2].specular) * pow(spec, mat.shininess);
+        if (spec > 0) lightVecs.specular = attenuation * mat.specular * ( lights[0].specular + lights[1].specular + lights[2].specular) * pow(spec, mat.shininess);
     }
 
-    return result;
+    return lightVecs;
 }
 
 void main()
 {
     // TODO
 
-    FragColor = texture(diffuseSampler, attribIn.texCoords);
+    FragColor = texture(diffuseSampler, attribIn.texCoords) + texture(specularSampler, attribIn.texCoords);
 
     vec3 L = normalize(attribIn.lightDir[0] + attribIn.lightDir[1] + attribIn.lightDir[2]);
     vec3 N = normalize(gl_FrontFacing ? attribIn.normal : -attribIn.normal);
     vec3 O = normalize(attribIn.obsPos);
 
-    Reflections reflections = calcReflection(L, N, O, attenuation);
-    vec4 color = vec4(mat.emission + reflections.ambient + reflections.diffuse + reflections.specular, 1.0f);
+    Light lightVecs = calcLight(L, N, O, attenuation);
+    vec4 color = vec4(mat.emission + lightVecs.ambient + lightVecs.diffuse + lightVecs.specular, 1.0f);
+    FragColor = texture(diffuseSampler, attribIn.texCoords) * vec4(lightVecs.diffuse, 1.0f);
+    FragColor += texture(specularSampler, attribIn.texCoords) * vec4(lightVecs.specular, 1.0f);
     FragColor += clamp(color, 0.0, 1.0);
 }

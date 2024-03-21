@@ -57,7 +57,7 @@ void main()
 
     attribOut.normal = normal * normalMatrix;
 
-    vec3 pos = vec3(view * modelView * vec4(position, 1.0f));
+    vec3 pos = vec3(modelView * vec4(position, 1.0f));
 
     attribOut.lightDir[0] = ( view * vec4(lights[0].position, 1.0f) ).xyz - pos;
     attribOut.lightDir[1] = ( view * vec4(lights[1].position, 1.0f) ).xyz - pos;
