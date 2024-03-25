@@ -74,30 +74,53 @@ Light calcLight(in vec3 L, in vec3 N, in vec3 O, UniversalLight light)
     return lightVecs;
 }
 
+float calcSpot(in vec3 D, in vec3 L, in vec3 N) {
+    float spotFactor = 0.0;
+    if (dot(D, N) >= 0) {
+        float spotDot = dot(L, D);
+        if (spotDot > cos(radians(spotOpeningAngle))) spotFactor = pow(spotDot, spotExponent);
+    }
+    return spotFactor;
+}
+
 void main()
 {
     // TODO
 
     vec3 N = normalize( attribIn.normal );
     vec3 O = normalize(attribIn.obsPos);
+    
 
     Light lightVecs;
     lightVecs.diffuse = vec3(0);
     lightVecs.specular = vec3(0);
 
-    for (int i = 0; i < 3; i++) {
-        vec3 L = normalize(attribIn.lightDir[i]);
-        Light temp = calcLight(L, N, O, lights[i]);
-
-        lightVecs.diffuse += temp.diffuse;
-        lightVecs.specular += temp.specular;
-    }
-    
-    //vec4 color = vec4(mat.emission + lightVecs.ambient + lightVecs.diffuse + lightVecs.specular, 1.0f);
     vec4 color = vec4(mat.emission + mat.ambient * (lightModelAmbient +
         lights[0].ambient +
         lights[1].ambient +
         lights[2].ambient), 1.0f);
+
+    for (int i = 0; i < 3; i++) {
+        vec3 L = normalize(attribIn.lightDir[i]);
+        vec3 D = normalize(attribIn.spotDir[i]);
+
+        Light temp = calcLight(L, N, O, lights[i]);
+
+        if (useSpotlight)
+        {
+            float spotFactor = calcSpot(D, L, N);
+            color *= spotFactor;
+            lightVecs.diffuse += temp.diffuse * calcSpot(D, L, N);
+            lightVecs.specular += temp.specular * calcSpot(D, L, N); 
+        }
+        else {
+            lightVecs.diffuse += temp.diffuse;
+            lightVecs.specular += temp.specular;
+        }
+    }
+    
+    //vec4 color = vec4(mat.emission + lightVecs.ambient + lightVecs.diffuse + lightVecs.specular, 1.0f);
+    
 
     FragColor = texture(diffuseSampler, attribIn.texCoords) * vec4(lightVecs.diffuse, 1.0f);
     FragColor += texture(specularSampler, attribIn.texCoords) * vec4(lightVecs.specular, 1.0f);
