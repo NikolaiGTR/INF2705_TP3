@@ -133,7 +133,7 @@ void main()
     // La texture fournie écrase la lumière spéculaire bleue et verte
     // Pour les voir, supprimer la multiplication par la texture
     FragColor = texture(diffuseSampler, attribIn.texCoords) * vec4(lightVecs.diffuse, 1.0f);
-    FragColor += texture(specularSampler, attribIn.texCoords) * vec4(lightVecs.specular, 1.0f);
+    FragColor += vec4(lightVecs.specular, 1.0f);
 
     FragColor += color;
 }
