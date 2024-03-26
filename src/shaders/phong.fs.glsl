@@ -78,11 +78,12 @@ float calcSpot(in vec3 D, in vec3 L, in vec3 N) {
     float spotFactor = 0.0;
     if (dot(D, N) >= 0) {
         float spotDot = dot(L, D);
-        if (spotDot > cos(radians(spotOpeningAngle)))
+        float delta = cos(radians(spotOpeningAngle));
+        if (spotDot > delta)
         {
             if (useDirect3D)
             {
-                spotFactor = smoothstep(pow(cos(radians(spotOpeningAngle)), 1.01 + spotExponent/2), cos(radians(spotOpeningAngle)), cos(radians(spotDot)));
+                spotFactor = smoothstep(pow(delta, 1.01 + spotExponent / 2), delta, spotDot);
             }
             else
             { 
