@@ -63,6 +63,7 @@ void main()
     attribOut.lightDir[1] = ( view * vec4(lights[1].position, 1.0f) ).xyz - pos;
     attribOut.lightDir[2] = ( view * vec4(lights[2].position, 1.0f) ).xyz - pos;
 
+
     for (int i = 0; i < 3; i++) {
         attribOut.spotDir[i] = mat3(view) * -lights[i].spotDirection;
     }
