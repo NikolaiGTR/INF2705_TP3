@@ -89,9 +89,9 @@ float calcSpot(in vec3 D, in vec3 L, in vec3 N) {
 }
 
 vec3 getNormalVector(){
-   vec3 a = vec3(gl_in[0].gl_Position) - vec3(gl_in[1].gl_Position);
-   vec3 b = vec3(gl_in[2].gl_Position) - vec3(gl_in[1].gl_Position);
-   return normalize(mat3(modelView)*cross(a, b));
+   vec3 a = vec3(attribIn[0].position) - vec3(attribIn[1].position);
+   vec3 b = vec3(attribIn[2].position) - vec3(attribIn[1].position);
+   return -cross(a,b);
 }
 
 void main()
@@ -113,7 +113,7 @@ void main()
     vec3 O = normalize(-obsPos);
 
     for (int i = 0; i < 3; i++) {
-        vec3 L = normalize(vec3(view * vec4(lights[0].position, 1.0f)).xyz - obsPos);
+        vec3 L = normalize(vec3(view * vec4(lights[i].position, 1.0f)).xyz - obsPos);
         vec3 D = normalize(mat3(view) * -lights[i].spotDirection);
 
         Light temp = calcLight(L, N, O, lights[i]);
@@ -133,8 +133,7 @@ void main()
     attribOut.diffuse=lightInfo.diffuse;
     attribOut.specular=lightInfo.specular;
     for( int i = 0 ; i<gl_in.length() ; i++){
-        gl_Position= vec4(attribIn[i].position,1.0f);
- 
+        gl_Position= gl_in[i].gl_Position;
         EmitVertex();
     }
     
