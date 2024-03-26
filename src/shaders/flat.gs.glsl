@@ -79,11 +79,23 @@ Light calcLight(in vec3 L, in vec3 N, in vec3 O, UniversalLight light)
     return lightVecs;
 }
 
+
 float calcSpot(in vec3 D, in vec3 L, in vec3 N) {
     float spotFactor = 0.0;
     if (dot(D, N) >= 0) {
         float spotDot = dot(L, D);
-        if (spotDot > cos(radians(spotOpeningAngle))) spotFactor = pow(spotDot, spotExponent);
+        float delta = cos(radians(spotOpeningAngle));
+        if (spotDot > delta)
+        {
+            if (useDirect3D)
+            {
+                spotFactor = smoothstep(pow(delta, 1.01 + spotExponent / 2), delta, spotDot);
+            }
+            else
+            { 
+                spotFactor = pow(spotDot, spotExponent);
+            }
+        }
     }
     return spotFactor;
 }
@@ -104,11 +116,9 @@ void main()
         lights[2].ambient));
 
     Light lightInfo;
-    lightInfo.diffuse=vec3(0.0f);
-    lightInfo.specular= vec3(0.0f);
     
     vec3 normal=normalMatrix*getNormalVector();
-    vec3 obsPos=vec3(modelView * vec4(attribIn[0].position, 1.0f));
+    vec3 obsPos=vec3(modelView * vec4((attribIn[0].position+attribIn[1].position+attribIn[2].position)/3, 1.0f));
     vec3 N = normalize(normal);
     vec3 O = normalize(-obsPos);
 
@@ -134,7 +144,7 @@ void main()
     attribOut.specular=lightInfo.specular;
     for( int i = 0 ; i<gl_in.length() ; i++){
         gl_Position= gl_in[i].gl_Position;
-        EmitVertex();
+       EmitVertex();
     }
     
 }
