@@ -108,20 +108,14 @@ vec3 getNormalVector(){
 
 void main()
 {
-    attribOut.texCoords = attribIn[0].texCoords;
-    attribOut.emission=vec3(mat.emission);
-    attribOut.ambient=vec3(mat.ambient * (lightModelAmbient +
-        lights[0].ambient +
-        lights[1].ambient +
-        lights[2].ambient));
-
+    
     Light lightInfo;
     
     vec3 normal=normalMatrix*getNormalVector();
     vec3 obsPos=vec3(modelView * vec4((attribIn[0].position+attribIn[1].position+attribIn[2].position)/3, 1.0f));
+    
     vec3 N = normalize(normal);
     vec3 O = normalize(-obsPos);
-
     for (int i = 0; i < 3; i++) {
         vec3 L = normalize(vec3(view * vec4(lights[i].position, 1.0f)).xyz - obsPos);
         vec3 D = normalize(mat3(view) * -lights[i].spotDirection);
@@ -139,11 +133,18 @@ void main()
             lightInfo.specular += temp.specular;
         }
     }
-	// TODO   
+
+    attribOut.texCoords = attribIn[0].texCoords;
+    attribOut.emission=vec3(mat.emission);
+    attribOut.ambient=vec3(mat.ambient * (lightModelAmbient +
+        lights[0].ambient +
+        lights[1].ambient +
+        lights[2].ambient));
     attribOut.diffuse=lightInfo.diffuse;
     attribOut.specular=lightInfo.specular;
+
     for( int i = 0 ; i<gl_in.length() ; i++){
-        gl_Position= gl_in[i].gl_Position;
+       gl_Position= gl_in[i].gl_Position;
        EmitVertex();
     }
     
