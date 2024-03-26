@@ -75,13 +75,32 @@ Light calcLight(in vec3 L, in vec3 N, in vec3 O, UniversalLight light) {
     return result;
 }
 
+float calcSpot(in vec3 D, in vec3 L, in vec3 N) {
+    float spotFactor = 0.0;
+    if (dot(D, N) >= 0) {
+        float spotDot = dot(L, D);
+        if (spotDot > cos(radians(spotOpeningAngle)))
+        {
+            if (useDirect3D)
+            {
+                spotFactor = smoothstep(pow(cos(radians(spotOpeningAngle)), 1.01 + spotExponent / 2), cos(radians(spotOpeningAngle)), cos(radians(spotDot)));
+            }
+            else
+            {
+                spotFactor = pow(spotDot, spotExponent);
+            }
+        }
+    }
+    return spotFactor;
+}
+
 void main()
 {
     // TODO
     gl_Position = mvp * vec4(position, 1.0f);
 
     attribOut.texCoords = texCoords;
-    attribOut.emission = mat.emission;
+    
 
     attribOut.ambient = mat.ambient * (lightModelAmbient +
         lights[0].ambient +
@@ -91,6 +110,25 @@ void main()
     vec3 pos = vec3(modelView * vec4(position, 1.0f));
     vec3 obsVec = (-pos);
 
+    vec3 spots;
+    spots = vec3(1.0, 1.0, 1.0);
+    vec3 spotDir[3];
+
+    for (int i = 0; i < 3; i++) {
+        spotDir[i] = mat3(view) * -lights[i].spotDirection;
+        spots *= spotDir[i];
+    }
+
+    attribOut.emission = useSpotlight ? mat.emission * spots : mat.emission;
+    attribOut.ambient = useSpotlight ? mat.ambient * (lightModelAmbient +
+        lights[0].ambient +
+        lights[1].ambient +
+        lights[2].ambient) * spots :
+        mat.ambient * (lightModelAmbient +
+        lights[0].ambient +
+        lights[1].ambient +
+        lights[2].ambient);
+
     attribOut.diffuse = vec3(0);
     attribOut.specular = vec3(0);
     vec3 N = normalize(normalMatrix * normal);
@@ -98,13 +136,21 @@ void main()
 
     for (int i = 0; i < 3; i++)
     {
-        vec3 lumDir = (view * vec4(lights[i].position, 1.0f)).xyz - pos;        
+        vec3 lumDir = (view * vec4(lights[i].position, 1.0f)).xyz - pos;
         vec3 L = normalize(lumDir);
-        
-        Light lightVecs = calcLight(L, N, O, lights[i]);
+        vec3 D = normalize(spotDir[i]);
 
-        attribOut.diffuse += lightVecs.diffuse;
-        attribOut.specular += lightVecs.specular;
+        Light temp = calcLight(L, N, O, lights[i]);
+
+        if (useSpotlight) {
+            float spotFactor = calcSpot(D, L, N);
+            attribOut.diffuse += temp.diffuse * spotFactor;
+            attribOut.specular += temp.specular * spotFactor;
+        }
+        else {
+            attribOut.diffuse += temp.diffuse;
+            attribOut.specular += temp.specular;
+        }
     }
     
 }
