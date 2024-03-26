@@ -78,7 +78,18 @@ float calcSpot(in vec3 D, in vec3 L, in vec3 N) {
     float spotFactor = 0.0;
     if (dot(D, N) >= 0) {
         float spotDot = dot(L, D);
-        if (spotDot > cos(radians(spotOpeningAngle))) spotFactor = pow(spotDot, spotExponent);
+        float delta = cos(radians(spotOpeningAngle));
+        if (spotDot > delta)
+        {
+            if (useDirect3D)
+            {
+                spotFactor = smoothstep(pow(delta, 1.01 + spotExponent / 2), delta, spotDot);
+            }
+            else
+            { 
+                spotFactor = pow(spotDot, spotExponent);
+            }
+        }
     }
     return spotFactor;
 }
@@ -118,11 +129,11 @@ void main()
             lightVecs.specular += temp.specular;
         }
     }
-    
-    //vec4 color = vec4(mat.emission + lightVecs.ambient + lightVecs.diffuse + lightVecs.specular, 1.0f);
-    
 
+    // La texture fournie écrase la lumière spéculaire bleue et verte
+    // Pour les voir, supprimer la multiplication par la texture
     FragColor = texture(diffuseSampler, attribIn.texCoords) * vec4(lightVecs.diffuse, 1.0f);
     FragColor += texture(specularSampler, attribIn.texCoords) * vec4(lightVecs.specular, 1.0f);
+
     FragColor += color;
 }
